@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinguaLink Chat</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>LinguaLink</h1>
+      </div>
+    </header>
+
+    <main id="messageList" class="message-list" aria-live="polite"></main>
+
+    <section class="composer">
+      <div class="draft-row">
+        <div id="draftArea" class="draft-area" aria-label="入力中メッセージ"></div>
+        <button id="sendBtn" class="send-button" type="button" disabled>送信</button>
+      </div>
+
+      <div id="tabRow" class="tab-row"></div>
+      <div id="wordGrid" class="word-grid"></div>
+    </section>
+  </div>
+
+  <dialog id="memoDialog" class="memo-dialog">
+    <form method="dialog" class="memo-form">
+      <button id="closeMemoBtn" value="cancel" type="button" class="ghost-button">✕</button>
+      <label>
+        <input id="memoInput" type="text" maxlength="50" placeholder="メモを追加" />
+      </label>
+      <span id="memoTarget"></span>
+      <menu>
+        <button id="saveMemoBtn" value="default" type="button" class="send-button">保存</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
