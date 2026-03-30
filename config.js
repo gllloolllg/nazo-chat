@@ -3,7 +3,7 @@ window.APP_CONFIG = {
   apiBaseUrl: 'https://script.google.com/macros/s/AKfycbyRtgGPO5CUeUq9jkVcVe_muaIp4Eb5kEHP4rxTEa1TReYItpw5qci_GJ97c_qhPTxd/exec',
 
   // URL 例: ?room=demo-room&player=A
-  pollIntervalMs: 400000,
+  pollIntervalMs: 3000,
   maxDraftTokens: 8,
 
   genres: [
