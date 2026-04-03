@@ -213,6 +213,14 @@
     memoTargetEl.textContent = surface;
     memoInputEl.value = state.notes[surface] || '';
     memoDialogEl.showModal();
+
+    setTimeout(function () {
+      memoInputEl.focus();
+      memoInputEl.setSelectionRange(
+        memoInputEl.value.length,
+        memoInputEl.value.length
+      );
+    }, 50);
   }
 
   function saveMemo() {
