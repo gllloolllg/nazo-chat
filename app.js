@@ -19,9 +19,10 @@
     activeGenreId: config.genres[0].id,
     draft: [],
     messages: [],
+    messageIds: new Set(),
     notes: loadNotes(),
     currentMemoToken: null,
-    lastSeenMessageId: null,
+    lastSeenMessageId: 0,
     pollHandle: null,
     assignedSlot: null,
     sending: false,
@@ -36,31 +37,24 @@
     renderDraft();
     renderLoading();
     bindEvents();
-    ensurePresence()
-      .then(function (response) {
-        if (response && response.ok) {
-          state.assignedSlot = response.playerSlot || null;
-        }
-      })
-      .finally(fetchMessages);
+    fetchMessages();
     state.pollHandle = window.setInterval(fetchMessages, config.pollIntervalMs);
-  }
-
-  function renderLoading() {
-    messageListEl.innerHTML = `
-      <div class="loading">
-        <div class="spinner"></div>
-      </div>
-    `;
   }
 
   function bindEvents() {
     sendBtnEl.addEventListener('click', sendDraft);
     saveMemoBtnEl.addEventListener('click', saveMemo);
-    closeMemoBtnEl.addEventListener('click', function () { memoDialogEl.close(); });
+    closeMemoBtnEl.addEventListener('click', function () {
+      memoDialogEl.close();
+    });
   }
 
- 
+  function renderLoading() {
+    messageListEl.innerHTML = ''
+      + '<div class="loading">'
+      + '  <div class="spinner"></div>'
+      + '</div>';
+  }
 
   function renderTabs() {
     tabRowEl.innerHTML = '';
@@ -80,7 +74,11 @@
 
   function renderWordGrid() {
     wordGridEl.innerHTML = '';
-    const genre = config.genres.find(function (item) { return item.id === state.activeGenreId; });
+    const genre = config.genres.find(function (item) {
+      return item.id === state.activeGenreId;
+    });
+    if (!genre) return;
+
     genre.words.forEach(function (word) {
       const button = document.createElement('button');
       button.className = 'word-button';
@@ -129,8 +127,8 @@
   }
 
   function renderMessages(shouldScroll) {
-  // if (state.isInitialLoading) return;
     messageListEl.innerHTML = '';
+
     if (!state.messages.length) {
       const empty = document.createElement('div');
       empty.className = 'empty';
@@ -140,54 +138,7 @@
     }
 
     state.messages.forEach(function (message) {
-      const isSelf = message.isSelf;
-      const row = document.createElement('div');
-      row.className = 'message-row ' + (isSelf ? 'self' : 'other');
-
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble' + (message.pending ? ' pending' : '');
-
-      const tokenWrap = document.createElement('div');
-      tokenWrap.className = 'tokens';
-
-      message.tokens.forEach(function (token) {
-        const tokenEl = document.createElement(isSelf ? 'span' : 'button');
-        tokenEl.className = ('token ' + (isSelf ? '' : 'noteable')).trim();
-        if (!isSelf) {
-          tokenEl.type = 'button';
-          tokenEl.addEventListener('click', function () {
-            openMemoDialog(token.surface);
-          });
-        }
-
-        const ruby = document.createElement('span');
-        ruby.className = 'token-ruby';
-        ruby.textContent = isSelf ? '' : (state.notes[token.surface] || '');
-
-        const main = document.createElement('span');
-        main.className = 'token-main';
-        main.textContent = token.surface;
-
-        tokenEl.appendChild(ruby);
-        tokenEl.appendChild(main);
-        tokenWrap.appendChild(tokenEl);
-      });
-
-      const time = document.createElement('div');
-      time.className = 'time ' + (isSelf ? 'time-self' : 'time-other');
-      time.textContent = formatTime(message.createdAt);
-
-      bubble.appendChild(tokenWrap);
-
-      if (isSelf) {
-        row.appendChild(time);
-        row.appendChild(bubble);
-      } else {
-        row.appendChild(bubble);
-        row.appendChild(time);
-      }
-
-      messageListEl.appendChild(row);
+      messageListEl.appendChild(createMessageRow(message));
     });
 
     if (shouldScroll) {
@@ -195,11 +146,67 @@
     }
   }
 
-    function scrollToLatestMessage() {
-      window.requestAnimationFrame(function () {
-        messageListEl.scrollTop = messageListEl.scrollHeight;
-      });
+  function createMessageRow(message) {
+    const isSelf = !!message.isSelf;
+    const row = document.createElement('div');
+    row.className = 'message-row ' + (isSelf ? 'self' : 'other');
+    row.dataset.messageId = String(message.id);
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble' + (message.pending ? ' pending' : '');
+
+    const tokenWrap = document.createElement('div');
+    tokenWrap.className = 'tokens';
+
+    (message.tokens || []).forEach(function (token) {
+      const tokenEl = document.createElement(isSelf ? 'span' : 'button');
+      tokenEl.className = ('token ' + (isSelf ? '' : 'noteable')).trim();
+
+      if (!isSelf) {
+        tokenEl.type = 'button';
+        tokenEl.addEventListener('click', function () {
+          openMemoDialog(token.surface);
+        });
+      }
+
+      const ruby = document.createElement('span');
+      ruby.className = 'token-ruby';
+      ruby.textContent = isSelf ? '' : (state.notes[token.surface] || '');
+      if (!ruby.textContent) {
+        ruby.style.display = 'none';
+      }
+
+      const main = document.createElement('span');
+      main.className = 'token-main';
+      main.textContent = token.surface;
+
+      tokenEl.appendChild(ruby);
+      tokenEl.appendChild(main);
+      tokenWrap.appendChild(tokenEl);
+    });
+
+    const time = document.createElement('div');
+    time.className = 'time ' + (isSelf ? 'time-self' : 'time-other');
+    time.textContent = formatTime(message.createdAt);
+
+    bubble.appendChild(tokenWrap);
+
+    if (isSelf) {
+      row.appendChild(time);
+      row.appendChild(bubble);
+    } else {
+      row.appendChild(bubble);
+      row.appendChild(time);
     }
+
+    return row;
+  }
+
+  function scrollToLatestMessage() {
+    window.requestAnimationFrame(function () {
+      messageListEl.scrollTop = messageListEl.scrollHeight;
+    });
+  }
 
   function openMemoDialog(surface) {
     state.currentMemoToken = surface;
@@ -231,7 +238,7 @@
     state.sending = true;
     renderDraft();
 
-    const draftWords = [...state.draft];
+    const draftWords = state.draft.slice();
 
     const optimisticMessage = {
       id: 'local_' + Date.now(),
@@ -264,32 +271,49 @@
         throw new Error(response && response.error ? response.error : 'Send failed');
       }
 
-      // 楽観表示した仮メッセージを消す
-      state.messages = state.messages.filter(function (m) {
-        return m.id !== optimisticMessage.id;
+      state.assignedSlot = response.playerSlot || state.assignedSlot;
+
+      const index = state.messages.findIndex(function (m) {
+        return m.id === optimisticMessage.id;
       });
 
-      await fetchMessages();
+      if (response.message) {
+        if (index !== -1) {
+          state.messages[index] = response.message;
+        } else if (!state.messageIds.has(response.message.id)) {
+          state.messages.push(response.message);
+        }
+        state.messageIds.add(response.message.id);
+        state.lastSeenMessageId = Math.max(
+          Number(state.lastSeenMessageId || 0),
+          Number(response.message.id || 0)
+        );
+        renderMessages(true);
+      } else {
+        state.messages = state.messages.filter(function (m) {
+          return m.id !== optimisticMessage.id;
+        });
+        renderMessages(false);
+      }
     } catch (err) {
       console.error(err);
       state.messages = state.messages.filter(function (m) {
         return m.id !== optimisticMessage.id;
       });
-      renderMessages();
+      renderMessages(false);
       alert('送信に失敗しました');
     } finally {
       state.sending = false;
       renderDraft();
     }
   }
-  
 
   function fetchMessages() {
     jsonpRequest({
       action: 'getMessages',
       roomId: roomId,
       deviceId: deviceId,
-      afterId: state.lastSeenMessageId || ''
+      afterId: String(state.lastSeenMessageId || 0)
     })
       .then(function (response) {
         if (!response || !response.ok) {
@@ -304,42 +328,36 @@
 
         if (Array.isArray(response.messages) && response.messages.length) {
           response.messages.forEach(function (message) {
-            if (!state.messages.some(function (existing) { return existing.id === message.id; })) {
+            if (!state.messageIds.has(message.id)) {
               state.messages.push(message);
+              state.messageIds.add(message.id);
               hasNewMessages = true;
             }
-            state.lastSeenMessageId = message.id;
+            state.lastSeenMessageId = Math.max(
+              Number(state.lastSeenMessageId || 0),
+              Number(message.id || 0)
+            );
           });
         }
 
-        state.messages.sort(function (a, b) {
-          return a.id - b.id;
-        });
-        renderMessages(hasNewMessages);
-        if (state.isInitialLoading) {
-          state.isInitialLoading = false;
+        if (hasNewMessages) {
+          renderMessages(true);
+        } else if (state.isInitialLoading) {
+          renderMessages(false);
         }
-        renderDraft();
+
+        state.isInitialLoading = false;
       })
       .catch(function (error) {
         console.error(error);
       });
   }
 
-  function ensurePresence() {
-    return jsonpRequest({
-      action: 'ensurePresence',
-      roomId: roomId,
-      deviceId: deviceId
-    }).catch(function (error) {
-      console.error(error);
-    });
-  }
-
   function jsonpRequest(queryParams) {
     return new Promise(function (resolve, reject) {
       const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
       const url = new URL(config.apiBaseUrl);
+
       Object.keys(queryParams).forEach(function (key) {
         url.searchParams.set(key, queryParams[key]);
       });

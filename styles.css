@@ -39,11 +39,10 @@ html, body {
   border-bottom: 1px solid var(--border);
 }
 .topbar h1 { margin: 0; font-size: 20px; }
-.topbar p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 
 .message-list {
   flex: 1 1 auto;
-  min-height:0;
+  min-height: 0;
   padding: 5px;
   overflow-y: auto;
   display: flex;
@@ -70,6 +69,9 @@ html, body {
 }
 .message-row.self .bubble {
   background: var(--self);
+}
+.bubble.pending {
+  opacity: 0.7;
 }
 
 .tokens {
@@ -99,6 +101,10 @@ html, body {
 .token-ruby {
   font-size: 11px;
   color: var(--muted);
+  line-height: 1;
+}
+.token-main {
+  line-height: 1.1;
 }
 
 .time {
@@ -107,14 +113,6 @@ html, body {
   white-space: nowrap;
   line-height: 1;
   margin-bottom: 6px;
-}
-
-.time-self {
-  order: 0;
-}
-
-.time-other {
-  order: 1;
 }
 
 .composer {
@@ -129,7 +127,7 @@ html, body {
   grid-template-columns: 1fr auto;
   gap: 10px;
   padding: 8px;
-  background:white;
+  background: white;
 }
 
 .draft-area {
@@ -181,8 +179,7 @@ html, body {
 .word-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  grid-template-rows: auto;
-  align-content: start;;
+  align-content: start;
   gap: 8px;
   background: #ebeff5;
   padding: 4px 8px 30px;
