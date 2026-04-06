@@ -44,6 +44,12 @@
   function bindEvents() {
     sendBtnEl.addEventListener('click', sendDraft);
     saveMemoBtnEl.addEventListener('click', saveMemo);
+    memoInputEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveMemo();
+      }
+    });
     closeMemoBtnEl.addEventListener('click', function () {
       memoDialogEl.close();
     });

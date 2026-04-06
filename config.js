@@ -1,6 +1,6 @@
 window.APP_CONFIG = {
   apiBaseUrl: 'https://script.google.com/macros/s/AKfycbyRtgGPO5CUeUq9jkVcVe_muaIp4Eb5kEHP4rxTEa1TReYItpw5qci_GJ97c_qhPTxd/exec',
-  pollIntervalMs: 2000,
+  pollIntervalMs: 200000,
   maxDraftTokens: 8,
 
   genres: [
@@ -93,16 +93,18 @@ window.APP_CONFIG = {
       id: 'number',
       label: '数',
       words: [
-        { id: 'zero', label: '0' },
-        { id: 'one', label: '1' },
-        { id: 'two', label: '2' },
-        { id: 'three', label: '3' },
-        { id: 'four', label: '4' },
-        { id: 'five', label: '5' },
-        { id: 'six', label: '6' },
-        { id: 'seven', label: '7' },
-        { id: 'eight', label: '8' },
-        { id: 'nine', label: '9' }
+        { id: 'one', label: '１' },
+        { id: 'two', label: '２' },
+        { id: 'three', label: '３' },
+        { id: 'four', label: '４' },
+        { id: 'five', label: '５' },
+        { id: 'six', label: '６' },
+        { id: 'seven', label: '７' },
+        { id: 'eight', label: '８' },
+        { id: 'nine', label: '９' },
+        { id: 'nega', label: '－' },
+        { id: 'zero', label: '０' },
+        { id: 'posi', label: '＋' }
       ]
     }
   ]

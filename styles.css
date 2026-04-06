@@ -21,6 +21,10 @@ html, body {
   overflow: hidden;
 }
 
+button {
+  color: black;
+}
+
 .app-shell {
   max-width: 900px;
   height: 100vh;
